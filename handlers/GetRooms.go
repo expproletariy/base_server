@@ -1,28 +1,20 @@
 package handlers
 
 import (
-	"github.com/expproletariy/base_server/chat"
+	"github.com/expproletariy/base_server/models"
 	"github.com/labstack/echo"
 	"net/http"
 )
 
-type Room struct {
-	//Room id
-	ID string `json:"id"`
-
-	//Room name
-	Name string `json:"name"`
-}
-
 func GetRooms(c echo.Context) error {
 
-	rooms := make([]Room, 0, 10)
+	var rooms []models.Room
+	err := models.StmtGetRooms.Select(&rooms)
+	if err != nil {
+		panic(err)
+	}
 
-	chat.Manager().EachRoom(func(id, name string) {
-		rooms = append(rooms, Room{ID: id, Name: name})
-	})
-
-	return c.JSON(http.StatusOK, map[string][]Room{
+	return c.JSON(http.StatusOK, map[string][]models.Room{
 		"rooms": rooms,
 	})
 

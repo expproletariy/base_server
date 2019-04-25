@@ -1,7 +1,7 @@
 package chat
 
 import (
-	"github.com/satori/go.uuid"
+	"github.com/expproletariy/base_server/types"
 	"sync"
 )
 
@@ -28,14 +28,20 @@ func Manager() *manager {
 	return instance
 }
 
-//CreateRoom init new chat room inside the manager
-func (mng *manager) CreateRoom(name string) (string, error) {
+//RegisterRoom init new chat room inside the manager
+func (mng *manager) RegisterRoom(room types.Room) (string, error) {
 	mng.mutex.Lock()
 	defer mng.mutex.Unlock()
-	roomID := uuid.NewV4().String()
-	mng.rooms[roomID] = NewRoom(roomID, name)
+	mng.rooms[room.ID] = NewRoom(room)
 
-	return roomID, nil
+	return room.ID, nil
+}
+
+//RoomCount existing in the memory
+func (mng *manager) RoomCount() int {
+	mng.mutex.RLock()
+	defer mng.mutex.RUnlock()
+	return len(mng.rooms)
 }
 
 //DeleteRoom remove room and rooms clients (close socket connections)
@@ -49,7 +55,7 @@ func (mng *manager) DeleteRoom(id string) error {
 		}
 		delete(mng.rooms, room.ID)
 	}
-	return NewError("Try to delete nonexistent room")
+	return types.NewError("Try to delete nonexistent room")
 }
 
 //GetRoom returns existing room by id
@@ -59,7 +65,7 @@ func (mng *manager) GetRoom(id string) (*Room, error) {
 	if room, ok := mng.rooms[id]; ok {
 		return room, nil
 	}
-	return nil, NewError("Try to get nonexistent room")
+	return nil, types.NewError("Try to get nonexistent room")
 }
 
 //GetRoom returns existing rooms
